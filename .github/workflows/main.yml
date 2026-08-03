@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build-test-coverage:
     name: Build, Test & Coverage
@@ -13,6 +16,8 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: 🟢 Setup Node
         uses: actions/setup-node@v6
@@ -28,4 +33,3 @@ jobs:
 
       - name: 🧪 Run tests
         run: npm run test
-
