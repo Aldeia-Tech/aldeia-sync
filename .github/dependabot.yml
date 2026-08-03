@@ -55,10 +55,10 @@ updates:
 
     ignore:
       # Evita atualizações automáticas de versão major do TypeScript
-      # e do Node, pois exigem validação manual para evitar quebras.
+      # e dos tipos do Node, pois exigem validação manual para evitar quebras.
       - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
-      - dependency-name: '@types/node'
+      - dependency-name: '`@types/node`'
         update-types: ['version-update:semver-major']
 
   # Github Actions
