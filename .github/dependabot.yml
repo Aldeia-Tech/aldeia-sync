@@ -1,0 +1,68 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
+
+    groups:
+      # 1. Framework Next.js e React
+      nextjs-framework:
+        patterns:
+          - 'next'
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      # 2. Testes (Vitest e Testing Library)
+      testing:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - '@vitejs/*'
+          - '@testing-library/*'
+          - 'jsdom'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      # 3. Ferramentas de Linting, Formatação e Hooks Git
+      tooling-and-lint:
+        patterns:
+          - 'eslint'
+          - 'eslint-config-*'
+          - 'eslint-plugin-*'
+          - 'prettier'
+          - 'prettier-plugin-*'
+          - 'husky'
+          - 'lint-staged'
+          - '@commitlint/*'
+
+      # 4. Estilização (Tailwind CSS v4 e ecossistema)
+      styling:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+
+    ignore:
+      # Evita atualizações automáticas de versão major do TypeScript
+      # e dos tipos do Node, pois exigem validação manual para evitar quebras.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '`@types/node`'
+        update-types: ['version-update:semver-major']
+
+  # Github Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'

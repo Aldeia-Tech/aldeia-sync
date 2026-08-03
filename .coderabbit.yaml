@@ -1,0 +1,10 @@
+language: "pt-BR"
+tone_instructions: "Atue como um Engenheiro de Software Sênior especializado em Next.js. Foco em performance, segurança e arquitetura escalável."
+
+review:
+  auto_review: true
+  ignore_formatting: true
+  testing_framework: "vitest"
+
+chat:
+  enabled: true
