@@ -1,11 +1,10 @@
+import { ThemeProvider, ThemeSwitcher } from '@/components/theme';
+import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
-import { Open_Sans } from 'next/font/google';
+import { Geist } from 'next/font/google';
 import './globals.css';
 
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
-  subsets: ['latin'],
-});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -18,8 +17,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" className={`${openSans.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+    <html
+      suppressHydrationWarning
+      lang="pt-br"
+      className={cn('h-full', 'antialiased', 'font-sans', geist.variable)}
+    >
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ThemeSwitcher />
+          <main>{children}</main>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
