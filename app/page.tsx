@@ -1,15 +1,17 @@
-export default function Home() {
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+
+export default async function Home() {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: todos } = await supabase.from('todos').select();
+
   return (
-    <section
-      data-testid="home"
-      className="flex h-screen flex-col items-center justify-center"
-    >
-      <h1 data-testid="home-title" className="text-4xl text-green-900">
-        <strong>Aldeia</strong> Tech
-      </h1>
-      <small data-testid="home-copyright">
-        todos dos direitos resevados ao <strong>Aldeia</strong>Tech ©
-      </small>
-    </section>
+    <ul>
+      {todos?.map((todo) => (
+        <li key={todo.id}>{todo.name}</li>
+      ))}
+    </ul>
   );
 }
