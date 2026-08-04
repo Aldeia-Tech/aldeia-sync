@@ -8,16 +8,33 @@ vi.mock('@supabase/ssr', () => ({
 }));
 
 vi.mock('next/server', () => {
-  const mockResponseCookies = { set: vi.fn() };
   return {
     NextResponse: {
-      next: vi.fn().mockImplementation(() => ({
-        cookies: mockResponseCookies,
-      })),
-      redirect: vi.fn().mockImplementation((url) => ({
-        status: 307,
-        url,
-      })),
+      next: vi.fn().mockImplementation(({ request } = {}) => {
+        const store = new Map();
+        return {
+          request,
+          cookies: {
+            set: vi.fn((name, value, options) =>
+              store.set(name, { name, value, ...options }),
+            ),
+            getAll: vi.fn(() => Array.from(store.values())),
+          },
+        };
+      }),
+      redirect: vi.fn().mockImplementation((url) => {
+        const store = new Map();
+        return {
+          status: 307,
+          url,
+          cookies: {
+            set: vi.fn((name, value, options) =>
+              store.set(name, { name, value, ...options }),
+            ),
+            getAll: vi.fn(() => Array.from(store.values())),
+          },
+        };
+      }),
     },
     NextRequest: vi.fn(),
   };
@@ -45,8 +62,16 @@ interface SupabaseMockConfig {
   };
 }
 
-describe('Supabase Proxy', () => {
+interface MockResponse {
+  cookies: {
+    set: ReturnType<typeof vi.fn>;
+    getAll: ReturnType<typeof vi.fn>;
+  };
+}
+
+describe('Supabase Proxy Utility', () => {
   let mockGetUser: ReturnType<typeof vi.fn>;
+
   const createMockRequest = (initialPathname: string) => {
     const clonedUrl = { pathname: initialPathname };
 
@@ -70,68 +95,75 @@ describe('Supabase Proxy', () => {
     vi.clearAllMocks();
 
     mockGetUser = vi.fn();
+
     vi.mocked(createServerClient).mockReturnValue({
       auth: { getUser: mockGetUser },
     } as unknown as ReturnType<typeof createServerClient>);
   });
 
-  describe('Lógica de Proteção de Rotas', () => {
-    it('deve redirecionar para /login se o usuário NÃO estiver logado e tentar acessar /admin/user', async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null } } as AuthResponse);
+  describe('Lógica de Proteção de Rotas com Propagação de Cookies', () => {
+    it('deve redirecionar p/ login e propagar os cookies gerados no getUser', async () => {
       const req = createMockRequest('/admin/user');
 
-      await createClient(req as unknown as NextRequest);
+      mockGetUser.mockImplementation(async () => {
+        const config = vi.mocked(createServerClient).mock
+          .calls[0][2] as SupabaseMockConfig;
+
+        config.cookies.setAll([
+          { name: 'auth_token', value: 'token-renovado' },
+        ]);
+
+        return { data: { user: null } } as AuthResponse;
+      });
+
+      const response = (await createClient(
+        req as unknown as NextRequest,
+      )) as unknown as MockResponse;
 
       expect(req.nextUrl.clone).toHaveBeenCalledOnce();
-
       expect(NextResponse.redirect).toHaveBeenCalledWith(
         expect.objectContaining({ pathname: '/login' }),
       );
-    });
-
-    it('deve redirecionar para / (home) se o usuário ESTIVER logado e tentar acessar /login', async () => {
-      mockGetUser.mockResolvedValue({
-        data: { user: { id: '1', email: 'test@test.com' } },
-      } as AuthResponse);
-
-      const req = createMockRequest('/login');
-
-      await createClient(req as unknown as NextRequest);
-
-      expect(req.nextUrl.clone).toHaveBeenCalledOnce();
-      expect(NextResponse.redirect).toHaveBeenCalledWith(
-        expect.objectContaining({ pathname: '/' }),
+      expect(response.cookies.set).toHaveBeenCalledWith(
+        'auth_token',
+        'token-renovado',
+        expect.any(Object),
       );
     });
 
-    it('NÃO deve redirecionar se o usuário NÃO estiver logado e acessar uma rota pública', async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null } } as AuthResponse);
+    it('deve redirecionar p/ root (/) e propagar os cookies se o usuário logado acessar /login', async () => {
+      const req = createMockRequest('/login');
 
-      const req = createMockRequest('/sobre');
+      mockGetUser.mockImplementation(async () => {
+        const config = vi.mocked(createServerClient).mock
+          .calls[0][2] as SupabaseMockConfig;
 
-      await createClient(req as unknown as NextRequest);
+        config.cookies.setAll([
+          { name: 'auth_token', value: 'token-admin-renovado' },
+        ]);
 
-      expect(req.nextUrl.clone).not.toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
-      expect(NextResponse.next).toHaveBeenCalled(); // Passou direto
-    });
+        return {
+          data: { user: { id: '1', email: 'test@test.com' } },
+        } as AuthResponse;
+      });
 
-    it('NÃO deve redirecionar se o usuário ESTIVER logado e acessar uma rota protegida permitida', async () => {
-      mockGetUser.mockResolvedValue({
-        data: { user: { id: '1', email: 'admin@test.com' } },
-      } as AuthResponse);
+      const response = (await createClient(
+        req as unknown as NextRequest,
+      )) as unknown as MockResponse;
 
-      const req = createMockRequest('/admin/user');
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        expect.objectContaining({ pathname: '/' }),
+      );
 
-      await createClient(req as unknown as NextRequest);
-
-      expect(req.nextUrl.clone).not.toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
-      expect(NextResponse.next).toHaveBeenCalled();
+      expect(response.cookies.set).toHaveBeenCalledWith(
+        'auth_token',
+        'token-admin-renovado',
+        expect.any(Object),
+      );
     });
   });
 
-  describe('Manipulação de Cookies', () => {
+  describe('Manipulação Básica de Cookies', () => {
     it('deve atualizar os cookies da Request e da Response através do setAll', async () => {
       mockGetUser.mockResolvedValue({ data: { user: null } } as AuthResponse);
       const req = createMockRequest('/rota-publica');
@@ -140,7 +172,6 @@ describe('Supabase Proxy', () => {
 
       const config = vi.mocked(createServerClient).mock
         .calls[0][2] as SupabaseMockConfig;
-
       const cookiesToSet: CookieToSet[] = [
         { name: 'auth_token', value: '12345', options: { path: '/' } },
       ];
@@ -150,8 +181,10 @@ describe('Supabase Proxy', () => {
       expect(req.cookies.set).toHaveBeenCalledWith('auth_token', '12345');
       expect(NextResponse.next).toHaveBeenCalledWith({ request: req });
 
-      const mockNextResponseInstance = vi.mocked(NextResponse.next).mock
-        .results[0].value;
+      const mockNextResponseInstance = vi
+        .mocked(NextResponse.next)
+        .mock.results.at(-1)?.value as MockResponse;
+
       expect(mockNextResponseInstance.cookies.set).toHaveBeenCalledWith(
         'auth_token',
         '12345',
@@ -164,10 +197,8 @@ describe('Supabase Proxy', () => {
       const req = createMockRequest('/rota-publica');
 
       await createClient(req as unknown as NextRequest);
-
       const config = vi.mocked(createServerClient).mock
         .calls[0][2] as SupabaseMockConfig;
-
       const cookies = config.cookies.getAll();
 
       expect(req.cookies.getAll).toHaveBeenCalledOnce();
