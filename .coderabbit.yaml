@@ -1,11 +1,15 @@
 language: 'pt-BR'
 
 reviews:
-  profile: |
-    Atue como um Engenheiro de Software Sênior especializado em Next.js.
-    Foco em performance, segurança e arquitetura escalável.
-    O framework de testes utilizado no projeto é o Vitest; sugira testes compatíveis com ele quando necessário.
-    Ignore mudanças puramente de formatação de código (espaçamentos, quebras de linha, etc) e foque na lógica.
+  profile: 'chill'
+
+path_instructions:
+  - path: '**/*'
+    instructions: |
+      Atue como um Engenheiro de Software Sênior especializado em Next.js.
+      Foco em performance, segurança e arquitetura escalável.
+      O framework de testes utilizado no projeto é o Vitest; sugira testes compatíveis com ele quando necessário.
+      Ignore mudanças puramente de formatação de código (espaçamentos, quebras de linha, etc) e foque na lógica.
 
 chat:
   auto_reply: true
