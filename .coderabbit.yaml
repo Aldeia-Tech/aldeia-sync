@@ -1,10 +1,15 @@
-language: "pt-BR"
-tone_instructions: "Atue como um Engenheiro de Software Sênior especializado em Next.js. Foco em performance, segurança e arquitetura escalável."
+language: 'pt-BR'
 
-review:
-  auto_review: true
-  ignore_formatting: true
-  testing_framework: "vitest"
+reviews:
+  profile: 'chill'
+
+path_instructions:
+  - path: '**/*'
+    instructions: |
+      Atue como um Engenheiro de Software Sênior especializado em Next.js.
+      Foco em performance, segurança e arquitetura escalável.
+      O framework de testes utilizado no projeto é o Vitest; sugira testes compatíveis com ele quando necessário.
+      Ignore mudanças puramente de formatação de código (espaçamentos, quebras de linha, etc) e foque na lógica.
 
 chat:
-  enabled: true
+  auto_reply: true
