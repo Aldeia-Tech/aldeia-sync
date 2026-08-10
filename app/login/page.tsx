@@ -1,3 +1,9 @@
+import { LoginForm } from '@/components/LoginForm';
+
 export default async function Login() {
-  return <h1>Login page</h1>;
+  return (
+    <section className="flex h-full items-center justify-center">
+      <LoginForm />
+    </section>
+  );
 }

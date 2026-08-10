@@ -161,6 +161,68 @@ describe('Supabase Proxy Utility', () => {
         expect.any(Object),
       );
     });
+
+    it('deve redirecionar p/ admin/user se o usuário logado acessar /', async () => {
+      const req = createMockRequest('/');
+
+      mockGetUser.mockImplementation(async () => {
+        const config = vi.mocked(createServerClient).mock
+          .calls[0][2] as SupabaseMockConfig;
+
+        config.cookies.setAll([
+          { name: 'auth_token', value: 'token-renovado' },
+        ]);
+
+        return {
+          data: { user: { id: '1', email: 'test@test.com' } },
+        } as AuthResponse;
+      });
+
+      const response = (await createClient(
+        req as unknown as NextRequest,
+      )) as unknown as MockResponse;
+
+      expect(req.nextUrl.clone).toHaveBeenCalledOnce();
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        expect.objectContaining({ pathname: '/admin/user' }),
+      );
+      expect(response.cookies.set).toHaveBeenCalledWith(
+        'auth_token',
+        'token-renovado',
+        expect.any(Object),
+      );
+    });
+
+    it('deve redirecionar p/ login/ se o usuário logado acessar /', async () => {
+      const req = createMockRequest('/');
+
+      mockGetUser.mockImplementation(async () => {
+        const config = vi.mocked(createServerClient).mock
+          .calls[0][2] as SupabaseMockConfig;
+
+        config.cookies.setAll([
+          { name: 'auth_token', value: 'token-renovado' },
+        ]);
+
+        return {
+          data: { user: null },
+        } as AuthResponse;
+      });
+
+      const response = (await createClient(
+        req as unknown as NextRequest,
+      )) as unknown as MockResponse;
+
+      expect(req.nextUrl.clone).toHaveBeenCalledOnce();
+      expect(NextResponse.redirect).toHaveBeenCalledWith(
+        expect.objectContaining({ pathname: '/login' }),
+      );
+      expect(response.cookies.set).toHaveBeenCalledWith(
+        'auth_token',
+        'token-renovado',
+        expect.any(Object),
+      );
+    });
   });
 
   describe('Manipulação Básica de Cookies', () => {
