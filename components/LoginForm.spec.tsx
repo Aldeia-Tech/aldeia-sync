@@ -25,7 +25,7 @@ describe('LoginForm (Client Component)', () => {
 
     mockRefresh = vi.fn();
     vi.mocked(useRouter).mockReturnValue({
-      refresh: mockRefresh,
+      replace: mockRefresh,
     } as unknown as ReturnType<typeof useRouter>);
   });
 
@@ -76,7 +76,7 @@ describe('LoginForm (Client Component)', () => {
     });
   });
 
-  it('deve chamar router.refresh() se o login for bem-sucedido', async () => {
+  it('deve chamar router.replace() se o login for bem-sucedido', async () => {
     render(<LoginForm />);
 
     vi.mocked(loginUser).mockResolvedValue({

@@ -36,7 +36,7 @@ export function LoginForm() {
           type: 'error',
         });
       } else if (response?.success) {
-        router.refresh();
+        router.replace('/');
       }
     });
   };
