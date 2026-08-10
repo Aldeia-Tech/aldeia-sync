@@ -18,7 +18,7 @@ export function NavBar() {
 
   return (
     <nav className="flex h-[5%] items-center justify-between p-4">
-      <h1>Alde</h1>
+      <h1>Aldeia Sync</h1>
       <div className="flex items-center gap-2">
         <ThemeSwitcher />
         {user ? (

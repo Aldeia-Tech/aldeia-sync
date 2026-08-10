@@ -47,13 +47,15 @@ describe('NavBar (Client Component)', () => {
     } as unknown as ReturnType<typeof createClient>);
   });
 
-  it('deve renderizar o logo (Alde) e o ThemeSwitcher para todos os usuários', () => {
+  it('deve renderizar o logo (Aldeia Sync) e o ThemeSwitcher para todos os usuários', () => {
     // Simulando que não há usuário (deslogado)
     vi.mocked(useUser).mockReturnValue(null);
 
     render(<NavBar />);
 
-    expect(screen.getByRole('heading', { name: 'Alde' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Aldeia Sync' }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('theme-switcher')).toBeInTheDocument();
   });
 
